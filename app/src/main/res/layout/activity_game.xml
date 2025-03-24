@@ -7,22 +7,28 @@
     android:layout_height="match_parent"
     tools:context=".GameActivity">
 
-    <!-- תצוגת הכביש באמצעות SurfaceView -->
+    <!-- תצוגת הכביש -->
     <com.example.projectcar.RoadSurfaceView
         android:id="@+id/road"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- הרכב הראשי של השחקן -->
+    <!-- תצוגת הג'יפים (שקופה שלא תסתיר את הרכב) -->
+    <com.example.projectcar.JeepManager
+        android:id="@+id/jeepManager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.99" />  <!-- אלפא נמוכה למניעת כיסוי מלא -->
+
+    <!-- הרכב של השחקן -->
     <ImageView
         android:id="@+id/car"
-        android:layout_width="96dp"
-        android:layout_height="134dp"
-        android:layout_marginBottom="16dp"
+        android:layout_width="100dp"
+        android:layout_height="150dp"
+        android:layout_marginBottom="40dp"
         android:src="@drawable/car"
         android:contentDescription="Car"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -47,7 +53,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
-        android:text="⬅️"
+        android:text=""
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -59,16 +65,10 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
-        android:text="➡️"
+        android:text=""
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/btnLeft" />
-
-    <!-- תצוגת הג'יפים באמצעות JeepManager -->
-    <com.example.projectcar.JeepManager
-        android:id="@+id/jeepManager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

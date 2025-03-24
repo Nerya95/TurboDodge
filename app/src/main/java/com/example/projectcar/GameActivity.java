@@ -1,6 +1,7 @@
 package com.example.projectcar;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Bitmap;
@@ -8,117 +9,58 @@ import android.graphics.BitmapFactory;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.animation.ObjectAnimator;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import android.os.Handler;
+import android.util.Log;
 
-public class GameActivity extends AppCompatActivity {
+import java.util.ArrayList;
+import java.util.Random;
 
-    private ImageView car;
-    private RoadSurfaceView roadView;
-    private int currentLane = 1; // הנתיב ההתחלתי של הרכב
-    private float[] lanePositions; // מערך שמכיל את מיקומי הנתיבים על המסך
-    private int screenWidth;
-    private int numLanes = 4; // מספר הנתיבים בכביש
-    private final float separatorWidthPercentage = 3.703f / 100f; // אחוז רוחב הפס להפרדה בין הנתיבים
-    private JeepManager jeepManager; // ניהול יצירת הג'יפים ותנועתם
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_game);
-
-        // שמירה על התאמה לשולי המסך
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.game), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
-        // אתחול רכיבי המשחק
-        car = findViewById(R.id.car);
-        roadView = findViewById(R.id.road);
-        Button btnLeft = findViewById(R.id.btnLeft);
-        Button btnRight = findViewById(R.id.btnRight);
-
-        // חישוב רוחב המסך ומיקומי הנתיבים לאחר טעינת ה-Layout
-        View gameLayout = findViewById(R.id.game);
-        gameLayout.post(() -> {
-            screenWidth = gameLayout.getWidth();
-            calculateLanePositions();
-            car.setX(lanePositions[currentLane]); // מיקום התחלתי של הרכב
-        });
-
-        // מעבר נתיב שמאלה בלחיצה על כפתור
-        btnLeft.setOnClickListener(view -> {
-            if (currentLane > 0) {
-                currentLane--;
-                moveCar();
-            }
-        });
-
-        // מעבר נתיב ימינה בלחיצה על כפתור
-        btnRight.setOnClickListener(view -> {
-            if (currentLane < lanePositions.length - 1) {
-                currentLane++;
-                moveCar();
-            }
-        });
-
-        jeepManager = findViewById(R.id.jeepManager);
-    }
-
-    // חישוב מיקומי הנתיבים
-    private void calculateLanePositions() {
-        lanePositions = new float[numLanes];
-        float totalSeparatorWidth = 3 * separatorWidthPercentage * screenWidth; // סך כל רוחב פסי ההפרדה
-        float laneWidth = (screenWidth - totalSeparatorWidth) / numLanes; // חישוב רוחב נתיב יחיד
-        int carWidth = car.getWidth();
-        for (int i = 0; i < numLanes; i++) {
-            float separatorOffset = i * separatorWidthPercentage * screenWidth;
-            float centerOfLane = (laneWidth * i) + separatorOffset + (laneWidth / 2);
-            lanePositions[i] = centerOfLane - (carWidth / 2); // חישוב מרכז הנתיב והצבת הרכב
-        }
-    }
-
-    // אנימציה להזזת הרכב בין הנתיבים
-    private void moveCar() {
-        ObjectAnimator animator = ObjectAnimator.ofFloat(car, "x", lanePositions[currentLane]);
-        animator.setDuration(0);
-        animator.start();
-    }
-}
-
-// מחלקה שמציירת את הכביש ומזיזה אותו כלפי מטה
-class RoadSurfaceView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
+public class JeepManager extends SurfaceView implements SurfaceHolder.Callback, Runnable {
     private SurfaceHolder surfaceHolder;
     private Thread drawThread;
     private boolean isRunning = false;
+    private ArrayList<Jeep> jeeps;
+    private Bitmap jeepBitmap;
     private Bitmap roadBitmap;
-    private float roadY1, roadY2;
-    private final float roadSpeed = 10f; // מהירות תנועת הכביש
+    private final int numLanes = 4;
+    private float[] lanePositions;
+    private int screenWidth, screenHeight;
+    private float jeepSpeed = 15f;
+    private Random random = new Random();
+    private Handler handler;
+    private float roadY1 = 0, roadY2;
+    private final float roadSpeed = 10f;
+    private float minJeepSpacing;
+    private long startTime;
+    private GameActivity gameActivity;
+    private float playerX, playerY, playerWidth, playerHeight;
 
-    public RoadSurfaceView(Context context, AttributeSet attrs) {
+    public JeepManager(Context context, AttributeSet attrs) {
         super(context, attrs);
+        if (context instanceof GameActivity) {
+            this.gameActivity = (GameActivity) context;
+        }
         surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
+        jeeps = new ArrayList<>();
+        jeepBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.jeep);
         roadBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.road);
+        handler = new Handler();
+        startTime = System.currentTimeMillis();
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         isRunning = true;
-        roadBitmap = Bitmap.createScaledBitmap(roadBitmap, getWidth(), getHeight(), true); // התאמת תמונת הכביש לגודל המסך
-        roadY1 = 0;
-        roadY2 = -getHeight();
+        screenWidth = getWidth();
+        screenHeight = getHeight();
+        float jeepWidth = screenWidth / 5f;
+        float jeepHeight = jeepWidth * ((float) jeepBitmap.getHeight() / jeepBitmap.getWidth());
+        jeepBitmap = Bitmap.createScaledBitmap(jeepBitmap, (int) jeepWidth, (int) jeepHeight, true);
+        roadBitmap = Bitmap.createScaledBitmap(roadBitmap, screenWidth, screenHeight, true);
+        roadY2 = -screenHeight;
+        minJeepSpacing = jeepHeight * 2f;
+        calculateLanePositions();
         drawThread = new Thread(this);
         drawThread.start();
     }
@@ -141,28 +83,112 @@ class RoadSurfaceView extends SurfaceView implements SurfaceHolder.Callback, Run
         while (isRunning) {
             Canvas canvas = surfaceHolder.lockCanvas();
             if (canvas != null) {
-                drawRoad(canvas);
+                drawGame(canvas);
                 surfaceHolder.unlockCanvasAndPost(canvas);
             }
-            roadY1 += roadSpeed;
-            roadY2 += roadSpeed;
-            if (roadY1 >= getHeight()) {
-                roadY1 = roadY2 - roadBitmap.getHeight();
-            }
-            if (roadY2 >= getHeight()) {
-                roadY2 = roadY1 - roadBitmap.getHeight();
-            }
+            updateGame();
             try {
-                Thread.sleep(16); // המתנה קצרה כדי לקבוע את קצב הרענון של האנימציה
+                Thread.sleep(16);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    // ציור הכביש על המסך
-    private void drawRoad(Canvas canvas) {
-        canvas.drawBitmap(roadBitmap, 0, roadY1, new Paint());
-        canvas.drawBitmap(roadBitmap, 0, roadY2, new Paint());
+    private void calculateLanePositions() {
+        lanePositions = new float[numLanes];
+        float laneWidth = screenWidth / numLanes;
+        for (int i = 0; i < numLanes; i++) {
+            lanePositions[i] = (laneWidth * i) + (laneWidth / 2) - (jeepBitmap.getWidth() / 2);
+        }
+    }
+
+    private void drawGame(Canvas canvas) {
+        canvas.drawBitmap(roadBitmap, 0, roadY1, null);
+        canvas.drawBitmap(roadBitmap, 0, roadY2, null);
+        Paint paint = new Paint();
+        for (Jeep jeep : jeeps) {
+            canvas.drawBitmap(jeepBitmap, jeep.x, jeep.y, paint);
+        }
+    }
+
+    private void updateGame() {
+        updateJeeps();
+        updateRoad();
+        updateDifficulty();
+        checkCollision();
+    }
+
+    private void updateJeeps() {
+        ArrayList<Jeep> toRemove = new ArrayList<>();
+        for (Jeep jeep : jeeps) {
+            jeep.y += jeepSpeed;
+            if (jeep.y > screenHeight) {
+                toRemove.add(jeep);
+            }
+        }
+        jeeps.removeAll(toRemove);
+
+        if (jeeps.isEmpty() || (jeeps.get(jeeps.size() - 1).y >= minJeepSpacing)) {
+            spawnJeep();
+        }
+    }
+
+    private void updateRoad() {
+        roadY1 += roadSpeed;
+        roadY2 += roadSpeed;
+        if (roadY1 >= screenHeight) {
+            roadY1 = roadY2 - screenHeight;
+        }
+        if (roadY2 >= screenHeight) {
+            roadY2 = roadY1 - screenHeight;
+        }
+    }
+
+    private void updateDifficulty() {
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        jeepSpeed = 15f + (elapsedTime / 20000f) * 5;
+    }
+
+    private void spawnJeep() {
+        int laneIndex = random.nextInt(numLanes);
+        float xPosition = lanePositions[laneIndex];
+        jeeps.add(new Jeep(xPosition, -jeepBitmap.getHeight()));
+    }
+
+    private void checkCollision() {
+        for (Jeep jeep : jeeps) {
+            if (playerX < jeep.x + jeepBitmap.getWidth() &&
+                    playerX + playerWidth > jeep.x &&
+                    playerY < jeep.y + jeepBitmap.getHeight() &&
+                    playerY + playerHeight > jeep.y) {
+                Log.d("JeepManager", "Collision detected!");
+                gameOver();
+                break;
+            }
+        }
+    }
+
+    private void gameOver() {
+        isRunning = false;
+        Intent intent = new Intent(gameActivity, DeathActivity.class);
+        gameActivity.startActivity(intent);
+    }
+
+    public void setPlayerPosition(float x, float y, float width, float height) {
+        this.playerX = x;
+        this.playerY = y;
+        this.playerWidth = width;
+        this.playerHeight = height;
+        Log.d("JeepManager", "Player position updated: x=" + x + ", y=" + y + ", width=" + width + ", height=" + height);
+    }
+
+    private static class Jeep {
+        float x, y;
+
+        Jeep(float x, float y) {
+            this.x = x;
+            this.y = y;
+        }
     }
 }
