@@ -1,10 +1,11 @@
 package com.example.projectcar;
 
-import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
-import android.view.View;
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.widget.Button;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class DeathActivity extends AppCompatActivity {
     @Override
@@ -12,26 +13,35 @@ public class DeathActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_death);
 
-        // מציאת הכפתורים לפי ה-ID שלהם
+        int finalScore = getIntent().getIntExtra("score", 0);
+
+        TextView scoreText = findViewById(R.id.final_score);
+        scoreText.setText("Score: " + finalScore);
+
+        SharedPreferences prefs = getSharedPreferences("GamePrefs", MODE_PRIVATE);
+        int highScore = prefs.getInt("high_score", 0);
+
+        TextView highScoreText = findViewById(R.id.high_score);
+        if (finalScore > highScore) {
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putInt("high_score", finalScore);
+            editor.apply();
+            highScoreText.setText("New High Score!");
+        } else {
+            highScoreText.setText("Best Score: " + highScore);
+        }
+
         Button restartButton = findViewById(R.id.restartButton);
         Button homeButton = findViewById(R.id.homeButton);
 
-        // מאזין לכפתור ההפעלה מחדש
-        restartButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(DeathActivity.this, GameActivity.class);
-                startActivity(intent);
-            }
+        restartButton.setOnClickListener(v -> {
+            startActivity(new Intent(DeathActivity.this, GameActivity.class));
+            finish();
         });
 
-        // מאזין לכפתור הבית
-        homeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(DeathActivity.this, MainActivity.class);
-                startActivity(intent);
-            }
+        homeButton.setOnClickListener(v -> {
+            startActivity(new Intent(DeathActivity.this, MainActivity.class));
+            finish();
         });
     }
 }

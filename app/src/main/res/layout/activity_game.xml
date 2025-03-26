@@ -7,18 +7,11 @@
     android:layout_height="match_parent"
     tools:context=".GameActivity">
 
-    <!-- תצוגת הכביש -->
-    <com.example.projectcar.RoadSurfaceView
-        android:id="@+id/road"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <!-- תצוגת הג'יפים (שקופה שלא תסתיר את הרכב) -->
+    <!-- מנהל הג'יפים והכביש -->
     <com.example.projectcar.JeepManager
         android:id="@+id/jeepManager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:alpha="0.99" />  <!-- אלפא נמוכה למניעת כיסוי מלא -->
+        android:layout_height="match_parent" />
 
     <!-- הרכב של השחקן -->
     <ImageView
