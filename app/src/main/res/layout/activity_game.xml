@@ -18,7 +18,7 @@
         android:id="@+id/car"
         android:layout_width="100dp"
         android:layout_height="150dp"
-        android:layout_marginBottom="40dp"
+        android:layout_marginBottom="25dp"
         android:src="@drawable/car"
         android:contentDescription="Car"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -59,9 +59,10 @@
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
         android:text=""
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btnLeft" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btnLeft"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
