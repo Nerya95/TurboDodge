@@ -6,20 +6,27 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 
 public class DeathActivity extends AppCompatActivity {
     private EditText high_score;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_death);
+        //String noteText = highScoreText
 
         int finalScore = getIntent().getIntExtra("score", 0);
 
@@ -35,24 +42,25 @@ public class DeathActivity extends AppCompatActivity {
             editor.putInt("high_score", finalScore);
             editor.apply();
             highScoreText.setText("New High Score!");
+
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                String userId = user.getUid();
+                FirebaseDatabase database = FirebaseDatabase.getInstance();
+                DatabaseReference userRef = database.getReference("users").child(userId).child("highest_Score");
+
+                String noteText = highScoreText.getText().toString();
+                userRef.setValue(noteText);
+                Toast.makeText(DeathActivity.this, "Record saved in cloud", Toast.LENGTH_SHORT).show();
+
+            } else {
+                // המשתמש לא מחובר
+                highScoreText.setError("עליך להתחבר כדי לשמור בענן");
+            }
         } else {
             highScoreText.setText("Best Score: " + highScore);
         }
 
-
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
-            String userId = user.getUid();
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-
-            DatabaseReference userRef = database.getReference("users").child(userId).child("highest Score");
-            String noteText = highScoreText.getText().toString();
-            userRef.setValue(noteText);
-
-        } else {
-            // המשתמש לא מחובר
-            highScoreText.setError("עליך להתחבר כדי לשמור בענן");
-        }
 
 
             Button restartButton = findViewById(R.id.restartButton);
