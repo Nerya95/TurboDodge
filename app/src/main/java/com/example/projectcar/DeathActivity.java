@@ -4,10 +4,18 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 public class DeathActivity extends AppCompatActivity {
+    private EditText high_score;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,17 +39,33 @@ public class DeathActivity extends AppCompatActivity {
             highScoreText.setText("Best Score: " + highScore);
         }
 
-        Button restartButton = findViewById(R.id.restartButton);
-        Button homeButton = findViewById(R.id.homeButton);
 
-        restartButton.setOnClickListener(v -> {
-            startActivity(new Intent(DeathActivity.this, GameActivity.class));
-            finish();
-        });
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            String userId = user.getUid();
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
 
-        homeButton.setOnClickListener(v -> {
-            startActivity(new Intent(DeathActivity.this, MainActivity.class));
-            finish();
-        });
+            DatabaseReference userRef = database.getReference("users").child(userId).child("highest Score");
+            String noteText = highScoreText.getText().toString();
+            userRef.setValue(noteText);
+
+        } else {
+            // המשתמש לא מחובר
+            highScoreText.setError("עליך להתחבר כדי לשמור בענן");
+        }
+
+
+            Button restartButton = findViewById(R.id.restartButton);
+            Button homeButton = findViewById(R.id.homeButton);
+
+            restartButton.setOnClickListener(v -> {
+                startActivity(new Intent(DeathActivity.this, GameActivity.class));
+                finish();
+            });
+
+            homeButton.setOnClickListener(v -> {
+                startActivity(new Intent(DeathActivity.this, MainActivity.class));
+                finish();
+            });
+        }
     }
-}

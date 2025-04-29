@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "243224159899",
+    "project_id": "turbo-dodge-db9da",
+    "storage_bucket": "turbo-dodge-db9da.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:243224159899:android:5a71d79f89c208bc58883e",
+        "android_client_info": {
+          "package_name": "com.example.projectcar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANAxA4OAEARxvDLSgDp-mWhOZtp94ayhw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
