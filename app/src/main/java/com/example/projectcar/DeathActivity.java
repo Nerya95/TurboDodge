@@ -2,6 +2,7 @@ package com.example.projectcar;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,19 +15,18 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 
 public class DeathActivity extends AppCompatActivity {
     private EditText high_score;
-
+    private MediaPlayer buttonClickSound;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_death);
-        //String noteText = highScoreText
+
+        // 🎵 טען את צליל הלחיצה
+        buttonClickSound = MediaPlayer.create(this, R.raw.button_click);
 
         int finalScore = getIntent().getIntExtra("score", 0);
 
@@ -52,28 +52,35 @@ public class DeathActivity extends AppCompatActivity {
                 String noteText = highScoreText.getText().toString();
                 userRef.setValue(noteText);
                 Toast.makeText(DeathActivity.this, "Record saved in cloud", Toast.LENGTH_SHORT).show();
-
             } else {
-                // המשתמש לא מחובר
                 highScoreText.setError("עליך להתחבר כדי לשמור בענן");
             }
         } else {
             highScoreText.setText("Best Score: " + highScore);
         }
 
+        Button restartButton = findViewById(R.id.restartButton);
+        Button homeButton = findViewById(R.id.homeButton);
 
+        restartButton.setOnClickListener(v -> {
+            buttonClickSound.start(); // ▶️ צליל לחיצה
+            startActivity(new Intent(DeathActivity.this, GameActivity.class));
+            finish();
+        });
 
-            Button restartButton = findViewById(R.id.restartButton);
-            Button homeButton = findViewById(R.id.homeButton);
+        homeButton.setOnClickListener(v -> {
+            buttonClickSound.start(); // ▶️ צליל לחיצה
+            startActivity(new Intent(DeathActivity.this, MainActivity.class));
+            finish();
+        });
+    }
 
-            restartButton.setOnClickListener(v -> {
-                startActivity(new Intent(DeathActivity.this, GameActivity.class));
-                finish();
-            });
-
-            homeButton.setOnClickListener(v -> {
-                startActivity(new Intent(DeathActivity.this, MainActivity.class));
-                finish();
-            });
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (buttonClickSound != null) {
+            buttonClickSound.release();
+            buttonClickSound = null;
         }
     }
+}

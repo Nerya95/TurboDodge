@@ -19,6 +19,9 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        // 🎵 הפעלת מוזיקה ייחודית למסך המשחק
+        MusicManager.getInstance().startMusic(this, R.raw.in_game_theme);
+
         car = findViewById(R.id.car);
         jeepManager = findViewById(R.id.jeepManager);
         btnLeft = findViewById(R.id.btnLeft);
@@ -74,5 +77,24 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
     @Override
     public void onScoreUpdated(int newScore) {
         runOnUiThread(() -> scoreView.setText(String.valueOf(newScore)));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        MusicManager.getInstance().pauseMusic();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        MusicManager.getInstance().resumeMusic();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // אם תרצה שהמוזיקה תיעצר לחלוטין כשיוצאים:
+        MusicManager.getInstance().stopMusic();
     }
 }

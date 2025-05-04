@@ -1,38 +1,66 @@
 package com.example.projectcar;
 
-import android.os.Bundle;
 import android.content.Intent;
+import android.media.AudioAttributes;
+import android.media.SoundPool;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
+
+    private SoundPool soundPool;
+    private int clickSoundId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // מציאת הכפתור לפי ה-ID שלו
+        MusicManager.getInstance().startMusic(this, R.raw.menu_background);
+        // SoundPool setup
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+
+        soundPool = new SoundPool.Builder()
+                .setMaxStreams(5)
+                .setAudioAttributes(audioAttributes)
+                .build();
+
+        clickSoundId = soundPool.load(this, R.raw.button_click, 1);
+
         Button playButton = findViewById(R.id.playButton);
         Button logInButton = findViewById(R.id.logInButton);
 
-        logInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // יצירת Intent למעבר ל-LoginActivity
-                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                startActivity(intent);  // התחלת הפעילות החדשה
-            }
+        logInButton.setOnClickListener(v -> {
+            soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
+            startActivity(new Intent(MainActivity.this, LoginActivity.class));
         });
 
-        // הוספת מאזין ללחיצה על הכפתור
-        playButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // יצירת Intent למעבר ל-GameActivity
-                Intent intent = new Intent(MainActivity.this, GameActivity.class);
-                startActivity(intent);  // התחלת הפעילות החדשה
-            }
+        playButton.setOnClickListener(v -> {
+            soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
+            startActivity(new Intent(MainActivity.this, GameActivity.class));
         });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        MusicManager.getInstance().pauseMusic();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        MusicManager.getInstance().resumeMusic();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        soundPool.release();
     }
 }
