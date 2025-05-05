@@ -43,4 +43,18 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    implementation ("com.squareup.okhttp3:okhttp:4.11.0")
+    // Import Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:33.11.0"))
+
+    // לדוגמה, הוספת Firebase Analytics
+    implementation("com.google.firebase:firebase-analytics")
+
+    // הוסף כאן את שאר Firebase SDKs שאתה רוצה להשתמש בהם
+    // לדוגמה, Firebase Authentication:
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-database")
+    implementation("com.google.firebase:firebase-auth:22.0.0")
+    implementation("com.google.firebase:firebase-firestore:24.3.1")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 }
