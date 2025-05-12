@@ -17,7 +17,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class DeathActivity extends AppCompatActivity {
-    private EditText high_score;
+    public EditText high_score;
     private MediaPlayer buttonClickSound;
 
     @Override
@@ -28,7 +28,7 @@ public class DeathActivity extends AppCompatActivity {
         // 🎵 טען את צליל הלחיצה
         buttonClickSound = MediaPlayer.create(this, R.raw.button_click);
 
-        int finalScore = getIntent().getIntExtra("score", 0);
+        int finalScore = getIntent().getIntExtra("score", 0);//ניקוד של המשחק
 
         TextView scoreText = findViewById(R.id.final_score);
         scoreText.setText("Score: " + finalScore);
@@ -49,8 +49,8 @@ public class DeathActivity extends AppCompatActivity {
                 FirebaseDatabase database = FirebaseDatabase.getInstance();
                 DatabaseReference userRef = database.getReference("users").child(userId).child("highest_Score");
 
-                String noteText = highScoreText.getText().toString();
-                userRef.setValue(noteText);
+                int bestScore = finalScore;
+                userRef.setValue(bestScore);
                 Toast.makeText(DeathActivity.this, "Record saved in cloud", Toast.LENGTH_SHORT).show();
             } else {
                 highScoreText.setError("עליך להתחבר כדי לשמור בענן");
@@ -74,6 +74,7 @@ public class DeathActivity extends AppCompatActivity {
             finish();
         });
     }
+
 
     @Override
     protected void onDestroy() {
