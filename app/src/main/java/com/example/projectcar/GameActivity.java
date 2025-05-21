@@ -1,5 +1,6 @@
 package com.example.projectcar;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -20,7 +21,14 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
         setContentView(R.layout.activity_game);
 
         // 🎵 הפעלת מוזיקה ייחודית למסך המשחק
-        MusicManager.getInstance().startMusic(this, R.raw.in_game_theme);
+        //MusicManager.getInstance().startMusic(this, R.raw.in_game_theme);
+
+        // 🎵 הפעלת מוזיקה ייחודית למסך המשחק
+        Intent startIntent = new Intent(this, MusicService.class);
+        startIntent.setAction(MusicService.ACTION_START);
+        startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.in_game_theme);
+        startService(startIntent);
+
 
         car = findViewById(R.id.car);
         jeepManager = findViewById(R.id.jeepManager);
@@ -82,19 +90,31 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
     @Override
     protected void onPause() {
         super.onPause();
-        MusicManager.getInstance().pauseMusic();
+        //MusicManager.getInstance().pauseMusic();
+
+        Intent pauseIntent = new Intent(this, MusicService.class);
+        pauseIntent.setAction(MusicService.ACTION_PAUSE);
+        startService(pauseIntent);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        MusicManager.getInstance().resumeMusic();
+        //MusicManager.getInstance().resumeMusic();
+
+        Intent resumeIntent = new Intent(this, MusicService.class);
+        resumeIntent.setAction(MusicService.ACTION_RESUME);
+        startService(resumeIntent);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         // אם תרצה שהמוזיקה תיעצר לחלוטין כשיוצאים:
-        MusicManager.getInstance().stopMusic();
+        //MusicManager.getInstance().stopMusic();
+
+        Intent stopIntent = new Intent(this, MusicService.class);
+        stopIntent.setAction(MusicService.ACTION_STOP);
+        startService(stopIntent);
     }
 }

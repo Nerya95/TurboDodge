@@ -105,7 +105,7 @@
         android:layout_marginBottom="4dp"
         android:fontFamily="@font/alfa_slab_one"
         android:shadowColor="#423838"
-        android:text="ababa"
+        android:text=" "
         android:textColor="#F8C00C"
         android:textSize="34sp"
         app:layout_constraintBottom_toBottomOf="@+id/textView"

@@ -28,7 +28,13 @@ public class LoginActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
 
-        MusicManager.getInstance().startMusic(this, R.raw.menu_background);
+        //MusicManager.getInstance().startMusic(this, R.raw.menu_background);
+
+        Intent startIntent = new Intent(this, MusicService.class);
+        startIntent.setAction(MusicService.ACTION_START);
+        startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.menu_background);
+        startService(startIntent);
+
         mAuth = FirebaseAuth.getInstance();
         emailEditText = findViewById(R.id.emailEditText);
         passwordEditText = findViewById(R.id.passwordEditText);
@@ -94,13 +100,22 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        MusicManager.getInstance().pauseMusic();
+        //MusicManager.getInstance().pauseMusic();
+
+        Intent pauseIntent = new Intent(this, MusicService.class);
+        pauseIntent.setAction(MusicService.ACTION_PAUSE);
+        startService(pauseIntent);
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        MusicManager.getInstance().resumeMusic();
+        //MusicManager.getInstance().resumeMusic();
+
+        Intent resumeIntent = new Intent(this, MusicService.class);
+        resumeIntent.setAction(MusicService.ACTION_RESUME);
+        startService(resumeIntent);
     }
 
     @Override

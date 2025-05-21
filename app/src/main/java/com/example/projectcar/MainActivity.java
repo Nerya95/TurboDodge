@@ -36,7 +36,14 @@ public class MainActivity extends AppCompatActivity {
 
         bestScoreView = findViewById(R.id.bestScoreView);
 
-        MusicManager.getInstance().startMusic(this, R.raw.menu_background);
+        //MusicManager.getInstance().startMusic(this, R.raw.menu_background);
+
+        // להתחיל לנגן
+        Intent startIntent = new Intent(this, MusicService.class);
+        startIntent.setAction(MusicService.ACTION_START);
+        startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.test);
+        startService(startIntent);
+
         // SoundPool setup
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_GAME)
@@ -74,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     Integer value = Integer.valueOf(dataSnapshot.getValue(Integer.class));
                     if (value != null) {
-                        bestScoreView.setText("BEST SCORE:" + value);
+                        bestScoreView.setText("BEST SCORE: " + value);
                         SharedPreferences prefs = getSharedPreferences("GamePrefs", MODE_PRIVATE);
                         prefs.edit().putInt("high_score", value).apply();
                     } else {
@@ -94,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
             SharedPreferences prefs = getSharedPreferences("GamePrefs", MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
 
-            bestScoreView.setText(prefs.getInt("HIGH SCORE: " + "high_score", 0));
+            bestScoreView.setText("HIGH SCORE:" + prefs.getInt( "high_score", 0));
         }
     }
 
@@ -102,13 +109,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        MusicManager.getInstance().pauseMusic();
+        //MusicManager.getInstance().pauseMusic();
+
+        Intent pauseIntent = new Intent(this, MusicService.class);
+        pauseIntent.setAction(MusicService.ACTION_PAUSE);
+        startService(pauseIntent);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        MusicManager.getInstance().resumeMusic();
+        //MusicManager.getInstance().resumeMusic();
+
+        Intent resumeIntent = new Intent(this, MusicService.class);
+        resumeIntent.setAction(MusicService.ACTION_RESUME);
+        startService(resumeIntent);
     }
 
     @Override

@@ -27,7 +27,7 @@ public class JeepManager extends SurfaceView implements SurfaceHolder.Callback, 
     private Bitmap jeepBitmap; // תמונת הג'יפ
     private final int numLanes = 4; // מספר הנתיבים במשחק
     private float[] lanePositions; // מיקומי מרכזי הנתיבים בציר X
-    private float jeepSpeed = 15f; // מהירות בסיסית של הג'יפים
+    private float jeepSpeed = 40f; // מהירות בסיסית של הג'יפים
     private float jeepWidth, jeepHeight; // מידות הג'יפ לאחר קנה מידה
 
     // משתנים לכביש
