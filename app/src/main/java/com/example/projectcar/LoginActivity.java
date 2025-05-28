@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -17,7 +19,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private EditText emailEditText, passwordEditText;
-    private Button loginButton, registerButton;
+    private Button loginButton, registerButton, backButton;
 
     private SoundPool soundPool;
     private int clickSoundId;
@@ -28,11 +30,21 @@ public class LoginActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
 
-        //MusicManager.getInstance().startMusic(this, R.raw.menu_background);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        );
 
         Intent startIntent = new Intent(this, MusicService.class);
         startIntent.setAction(MusicService.ACTION_START);
-        startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.menu_background);
+        startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.menu_theme);
         startService(startIntent);
 
         mAuth = FirebaseAuth.getInstance();
@@ -40,6 +52,7 @@ public class LoginActivity extends AppCompatActivity {
         passwordEditText = findViewById(R.id.passwordEditText);
         loginButton = findViewById(R.id.loginButton);
         registerButton = findViewById(R.id.registerButton);
+        backButton = findViewById(R.id.backButton);
 
         // Sound setup
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -95,12 +108,23 @@ public class LoginActivity extends AppCompatActivity {
                         }
                     });
         });
+
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
+                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                finish();
+            }
+        });
     }
+
+
+
 
     @Override
     protected void onPause() {
         super.onPause();
-        //MusicManager.getInstance().pauseMusic();
 
         Intent pauseIntent = new Intent(this, MusicService.class);
         pauseIntent.setAction(MusicService.ACTION_PAUSE);
@@ -111,7 +135,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        //MusicManager.getInstance().resumeMusic();
 
         Intent resumeIntent = new Intent(this, MusicService.class);
         resumeIntent.setAction(MusicService.ACTION_RESUME);

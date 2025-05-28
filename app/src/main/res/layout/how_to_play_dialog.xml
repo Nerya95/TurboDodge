@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/dialog_background"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:id="@+id/dialog_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:fontFamily="@font/aldrich"
+        android:text="HOW TO PLAY"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/dialog_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/aldrich"
+        android:gravity="center_horizontal|center_vertical"
+        android:lineSpacingExtra="6dp"
+        android:text="Watch out for jeeps! \nTap the left or right side of the screen to change lanes. \nSign in with your email to save your high score online! \n"
+        android:textStyle="bold"
+        android:textAlignment="center"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/dialog_button_close"
+        android:layout_width="129dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#B3084278"
+        android:fontFamily="@font/aldrich"
+        android:text="GOT IT"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp" /> <!-- deep blue like in main screen -->
+
+</LinearLayout>

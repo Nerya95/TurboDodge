@@ -2,15 +2,21 @@ package com.example.projectcar;
 
 import static android.content.ContentValues.TAG;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.view.WindowManager;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -27,21 +33,31 @@ public class MainActivity extends AppCompatActivity {
     private SoundPool soundPool;
     private int clickSoundId;
     private TextView bestScoreView;
-    private Button recordButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        bestScoreView = findViewById(R.id.bestScoreView);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        //MusicManager.getInstance().startMusic(this, R.raw.menu_background);
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        );
+
+
+        bestScoreView = findViewById(R.id.bestScoreView);
 
         // להתחיל לנגן
         Intent startIntent = new Intent(this, MusicService.class);
         startIntent.setAction(MusicService.ACTION_START);
-        startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.test);
+        startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.menu_theme);
         startService(startIntent);
 
         // SoundPool setup
@@ -59,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
         Button playButton = findViewById(R.id.playButton);
         Button logInButton = findViewById(R.id.logInButton);
+        Button howToPlayButton = findViewById(R.id.howToPlayButton); // ← כפתור "איך משחקים"
 
         logInButton.setOnClickListener(v -> {
             soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
@@ -70,6 +87,30 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(MainActivity.this, GameActivity.class));
         });
 
+        // 📌 לחיצה על כפתור "איך משחקים"
+        howToPlayButton.setOnClickListener(v -> {
+            soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
+            LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+            View view = inflater.inflate(R.layout.how_to_play_dialog, null);
+
+            AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                    .setView(view)
+                    .create();
+
+            Button closeBtn = view.findViewById(R.id.dialog_button_close);
+            closeBtn.setOnClickListener(btn -> {
+                soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
+                dialog.dismiss();
+            });
+
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            }
+
+            dialog.show();
+        });
+
+        // 🧠 הצגת שיאים מהשרת
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             String userId = user.getUid();
@@ -79,13 +120,13 @@ public class MainActivity extends AppCompatActivity {
             userRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    Integer value = Integer.valueOf(dataSnapshot.getValue(Integer.class));
+                    Integer value = dataSnapshot.getValue(Integer.class);
                     if (value != null) {
                         bestScoreView.setText("BEST SCORE: " + value);
                         SharedPreferences prefs = getSharedPreferences("GamePrefs", MODE_PRIVATE);
                         prefs.edit().putInt("high_score", value).apply();
                     } else {
-                        bestScoreView.setText(value);
+                        bestScoreView.setText("BEST SCORE: 0");
                     }
                 }
 
@@ -95,22 +136,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         } else {
-            Button recordButton = findViewById(R.id.recordButton);
-            TextView bestScoreView = findViewById(R.id.bestScoreView);
-
             SharedPreferences prefs = getSharedPreferences("GamePrefs", MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
-
-            bestScoreView.setText("HIGH SCORE:" + prefs.getInt( "high_score", 0));
+            bestScoreView.setText("HIGH SCORE: " + prefs.getInt("high_score", 0));
         }
     }
-
 
     @Override
     protected void onPause() {
         super.onPause();
-        //MusicManager.getInstance().pauseMusic();
-
         Intent pauseIntent = new Intent(this, MusicService.class);
         pauseIntent.setAction(MusicService.ACTION_PAUSE);
         startService(pauseIntent);
@@ -119,8 +152,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        //MusicManager.getInstance().resumeMusic();
-
         Intent resumeIntent = new Intent(this, MusicService.class);
         resumeIntent.setAction(MusicService.ACTION_RESUME);
         startService(resumeIntent);

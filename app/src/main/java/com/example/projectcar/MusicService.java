@@ -31,9 +31,14 @@ public class MusicService extends Service {
                             mediaPlayer.release();
                         }
                         mediaPlayer = MediaPlayer.create(this, musicResId);
+                        if (mediaPlayer == null) {
+                            Log.e("MusicService", "MediaPlayer creation failed - resource not found or invalid format");
+                        }
+
                         mediaPlayer.setLooping(true);
                         mediaPlayer.setVolume(1.0f, 1.0f);
                         mediaPlayer.start();
+                        Log.d("MusicService", "MediaPlayer started");
                     }
                     break;
 
