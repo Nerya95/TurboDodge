@@ -3,5 +3,5 @@
     android:shape="rectangle">
     <solid android:color="#364D36"/> <!-- שחור שקוף קצת -->
     <corners android:radius="20dp"/>
-    <stroke android:width="12dp" android:color="#D5084278"/> <!-- כתום אש -->
+    <stroke android:width="10dp" android:color="#D5084278"/> <!-- כתום אש -->
 </shape>

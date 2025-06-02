@@ -54,11 +54,14 @@ public class MainActivity extends AppCompatActivity {
 
         bestScoreView = findViewById(R.id.bestScoreView);
 
-        // להתחיל לנגן
-        Intent startIntent = new Intent(this, MusicService.class);
-        startIntent.setAction(MusicService.ACTION_START);
-        startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.menu_theme);
-        startService(startIntent);
+        // להתחיל לנגן\
+        if (!MusicService.isPlaying) {
+            Intent startIntent = new Intent(this, MusicService.class);
+            startIntent.setAction(MusicService.ACTION_START);
+            startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.menu_theme);
+            startService(startIntent);
+        }
+
 
         // SoundPool setup
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -76,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
         Button playButton = findViewById(R.id.playButton);
         Button logInButton = findViewById(R.id.logInButton);
         Button howToPlayButton = findViewById(R.id.howToPlayButton); // ← כפתור "איך משחקים"
+        Button creditsButton = findViewById(R.id.creditsButton);
 
         logInButton.setOnClickListener(v -> {
             soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
@@ -110,9 +114,37 @@ public class MainActivity extends AppCompatActivity {
             dialog.show();
         });
 
+        creditsButton.setOnClickListener(v -> {
+            soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
+            LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+            View view = inflater.inflate(R.layout.credits_dialog, null);
+
+            AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                    .setView(view)
+                    .create();
+
+            Button closeBtn = view.findViewById(R.id.dialog_button_close);
+            closeBtn.setOnClickListener(btn -> {
+                soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
+                dialog.dismiss();
+            });
+
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            }
+
+            dialog.show();
+        });
+
         // 🧠 הצגת שיאים מהשרת
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
+
+        bestScoreView.setText("High scores not available offline");
+        if (user == null) {
+            SharedPreferences prefs = getSharedPreferences("GamePrefs", MODE_PRIVATE);
+            bestScoreView.setText("HIGH SCORE:" + prefs.getInt("high_score", 0));
+        }
+        else {
             String userId = user.getUid();
             FirebaseDatabase database = FirebaseDatabase.getInstance();
             DatabaseReference userRef = database.getReference("users").child(userId).child("highest_Score");
@@ -135,9 +167,6 @@ public class MainActivity extends AppCompatActivity {
                     Log.w(TAG, "Failed to read value.", error.toException());
                 }
             });
-        } else {
-            SharedPreferences prefs = getSharedPreferences("GamePrefs", MODE_PRIVATE);
-            bestScoreView.setText("HIGH SCORE: " + prefs.getInt("high_score", 0));
         }
     }
 
@@ -163,3 +192,7 @@ public class MainActivity extends AppCompatActivity {
         soundPool.release();
     }
 }
+
+
+
+

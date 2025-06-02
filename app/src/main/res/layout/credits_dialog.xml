@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_background"
+    android:gravity="center|top"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/dialog_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:fontFamily="@font/aldrich"
+        android:text="CREDITS"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/dialog_message"
+        android:layout_width="321dp"
+        android:layout_height="match_parent"
+        android:fontFamily="@font/aldrich"
+        android:gravity="center"
+        android:lineSpacingExtra="6dp"
+        android:text="Development &amp; Programming: Nerya Tzarfati\n
+    Pixel Art &amp; Animation: Nerya Tzarfati\n
+    Graphic Design: Nerya Tzarfati\n
+    Background Image &amp; Logo: GPT\n
+    Music: Suno\n\n
+    Special Thanks:\n
+    Hashem\n
+    Dvora Yaish\n
+    Gipi\n
+    Ariel Elizur\n\n
+    Thanks for playing!\n"
+        android:textAlignment="center"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/dialog_button_close"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#B3084278"
+        android:fontFamily="@font/aldrich"
+        android:text="GOT IT"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold" /> <!-- deep blue like in main screen -->
+
+</LinearLayout>

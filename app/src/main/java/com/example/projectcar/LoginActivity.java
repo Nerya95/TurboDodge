@@ -42,11 +42,6 @@ public class LoginActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         );
 
-        Intent startIntent = new Intent(this, MusicService.class);
-        startIntent.setAction(MusicService.ACTION_START);
-        startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.menu_theme);
-        startService(startIntent);
-
         mAuth = FirebaseAuth.getInstance();
         emailEditText = findViewById(R.id.emailEditText);
         passwordEditText = findViewById(R.id.passwordEditText);

@@ -14,6 +14,7 @@ public class MusicService extends Service {
     public static final String EXTRA_RES_ID = "musicResId";
 
     private MediaPlayer mediaPlayer;
+    public static boolean isPlaying = false; // <- חדש
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -24,33 +25,41 @@ public class MusicService extends Service {
         if (action != null) {
             switch (action) {
                 case ACTION_START:
-                    int musicResId = intent.getIntExtra(EXTRA_RES_ID, -1);
-                    Log.d("MusicService", "ACTION_START received");
-                    if (musicResId != -1) {
-                        if (mediaPlayer != null) {
-                            mediaPlayer.release();
-                        }
-                        mediaPlayer = MediaPlayer.create(this, musicResId);
-                        if (mediaPlayer == null) {
-                            Log.e("MusicService", "MediaPlayer creation failed - resource not found or invalid format");
-                        }
+                    if (!isPlaying) {
+                        int musicResId = intent.getIntExtra(EXTRA_RES_ID, -1);
+                        Log.d("MusicService", "ACTION_START received");
+                        if (musicResId != -1) {
+                            if (mediaPlayer != null) {
+                                mediaPlayer.release();
+                            }
+                            mediaPlayer = MediaPlayer.create(this, musicResId);
+                            if (mediaPlayer == null) {
+                                Log.e("MusicService", "MediaPlayer creation failed - resource not found or invalid format");
+                                break;
+                            }
 
-                        mediaPlayer.setLooping(true);
-                        mediaPlayer.setVolume(1.0f, 1.0f);
-                        mediaPlayer.start();
-                        Log.d("MusicService", "MediaPlayer started");
+                            mediaPlayer.setLooping(true);
+                            mediaPlayer.setVolume(1.0f, 1.0f);
+                            mediaPlayer.start();
+                            isPlaying = true;
+                            Log.d("MusicService", "MediaPlayer started");
+                        }
+                    } else {
+                        Log.d("MusicService", "Music already playing – skipping restart");
                     }
                     break;
 
                 case ACTION_PAUSE:
                     if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                         mediaPlayer.pause();
+                        isPlaying = false;
                     }
                     break;
 
                 case ACTION_RESUME:
                     if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
                         mediaPlayer.start();
+                        isPlaying = true;
                     }
                     break;
 
@@ -59,8 +68,9 @@ public class MusicService extends Service {
                         mediaPlayer.stop();
                         mediaPlayer.release();
                         mediaPlayer = null;
+                        isPlaying = false;
                     }
-                    stopSelf(); // סיום השירות
+                    stopSelf();
                     break;
             }
         }
@@ -74,6 +84,7 @@ public class MusicService extends Service {
             mediaPlayer.release();
             mediaPlayer = null;
         }
+        isPlaying = false; // <- ודא שמתעדכן גם כאן
         super.onDestroy();
     }
 

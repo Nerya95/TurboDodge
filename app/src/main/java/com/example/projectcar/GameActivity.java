@@ -36,12 +36,9 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
 
 
         // 🎵 הפעלת מוזיקה ייחודית למסך המשחק
-        //MusicManager.getInstance().startMusic(this, R.raw.in_game_theme);
-
-        // 🎵 הפעלת מוזיקה ייחודית למסך המשחק
         Intent startIntent = new Intent(this, MusicService.class);
         startIntent.setAction(MusicService.ACTION_START);
-        startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.in_game_theme);
+        startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.in_game_theme2);
         startService(startIntent);
 
 
