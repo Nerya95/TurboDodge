@@ -7,9 +7,14 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
+/**
+ * מסך המשחק הראשי שמנהל את שליטת המשתמש ברכב, נקודות, ותגובות למשחק.
+ */
 public class GameActivity extends AppCompatActivity implements JeepManager.ScoreListener {
+
     private ImageView car;
     private JeepManager jeepManager;
     private Button btnLeft, btnRight;
@@ -22,8 +27,25 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        keepScreenAwake();
+        hideSystemUI();
+        startGameMusic();
+        initializeViews();
+        setListeners();
+        setupInitialCarPosition();
+    }
 
+    /**
+     * מונע מהמסך להיכבות בזמן המשחק.
+     */
+    private void keepScreenAwake() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    /**
+     * מסתיר את ה־UI כדי לאפשר תצוגה במסך מלא.
+     */
+    private void hideSystemUI() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
@@ -33,39 +55,72 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         );
+    }
 
-
-        // 🎵 הפעלת מוזיקה ייחודית למסך המשחק
+    /**
+     * מתחיל את מוזיקת הרקע של המשחק.
+     */
+    private void startGameMusic() {
         Intent startIntent = new Intent(this, MusicService.class);
         startIntent.setAction(MusicService.ACTION_START);
         startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.in_game_theme2);
         startService(startIntent);
+    }
 
-
+    /**
+     * אתחול רכיבי המסך.
+     */
+    private void initializeViews() {
         car = findViewById(R.id.car);
         jeepManager = findViewById(R.id.jeepManager);
         btnLeft = findViewById(R.id.btnLeft);
         btnRight = findViewById(R.id.btnRight);
         scoreView = findViewById(R.id.score);
-
         jeepManager.setScoreListener(this);
+    }
 
-        btnLeft.setOnClickListener(v -> moveCarLeft());
-        btnRight.setOnClickListener(v -> moveCarRight());
+    /**
+     * מאזינים ללחצני הזזה.
+     */
+    private void setListeners() {
+        btnLeft.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                moveCarLeft();
+            }
+        });
 
-        car.post(() -> {
-            lanePositions = jeepManager.getLanePositions();
-            currentLane = 1;
-            updateCarPosition();
-            jeepManager.setPlayerPosition(
-                    car.getX(),
-                    car.getY(),
-                    car.getWidth(),
-                    car.getHeight()
-            );
+        btnRight.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                moveCarRight();
+            }
         });
     }
 
+    /**
+     * מקבע את מיקום הרכב בתחילת המשחק.
+     */
+    private void setupInitialCarPosition() {
+        car.post(new Runnable() {
+            @Override
+            public void run() {
+                lanePositions = jeepManager.getLanePositions();
+                currentLane = 1;
+                updateCarPosition();
+                jeepManager.setPlayerPosition(
+                        car.getX(),
+                        car.getY(),
+                        car.getWidth(),
+                        car.getHeight()
+                );
+            }
+        });
+    }
+
+    /**
+     * מזיז את הרכב שמאלה אם אפשר.
+     */
     private void moveCarLeft() {
         if (currentLane > 0) {
             currentLane--;
@@ -73,6 +128,9 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
         }
     }
 
+    /**
+     * מזיז את הרכב ימינה אם אפשר.
+     */
     private void moveCarRight() {
         if (currentLane < 3) {
             currentLane++;
@@ -80,11 +138,13 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
         }
     }
 
+    /**
+     * מעדכן את מיקום הרכב במסך לפי הנתיב.
+     */
     private void updateCarPosition() {
         if (lanePositions != null && lanePositions.length > currentLane) {
             float newX = lanePositions[currentLane] + (jeepManager.getJeepWidth() - car.getWidth()) / 2;
             car.setX(newX);
-
             jeepManager.setPlayerPosition(
                     newX,
                     car.getY(),
@@ -94,16 +154,23 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
         }
     }
 
+    /**
+     * מעדכן את תצוגת הניקוד.
+     * @param newScore ניקוד מעודכן
+     */
     @Override
-    public void onScoreUpdated(int newScore) {
-        runOnUiThread(() -> scoreView.setText(String.valueOf(newScore)));
+    public void onScoreUpdated(final int newScore) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                scoreView.setText(String.valueOf(newScore));
+            }
+        });
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        //MusicManager.getInstance().pauseMusic();
-
         Intent pauseIntent = new Intent(this, MusicService.class);
         pauseIntent.setAction(MusicService.ACTION_PAUSE);
         startService(pauseIntent);
@@ -112,8 +179,6 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
     @Override
     protected void onResume() {
         super.onResume();
-        //MusicManager.getInstance().resumeMusic();
-
         Intent resumeIntent = new Intent(this, MusicService.class);
         resumeIntent.setAction(MusicService.ACTION_RESUME);
         startService(resumeIntent);
@@ -122,9 +187,6 @@ public class GameActivity extends AppCompatActivity implements JeepManager.Score
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // אם תרצה שהמוזיקה תיעצר לחלוטין כשיוצאים:
-        //MusicManager.getInstance().stopMusic();
-
         Intent stopIntent = new Intent(this, MusicService.class);
         stopIntent.setAction(MusicService.ACTION_STOP);
         startService(stopIntent);

@@ -13,10 +13,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
-import android.view.WindowManager;
-
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -28,19 +27,39 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+/**
+ * MainActivity היא הפעילות הראשית של האפליקציה שמציגה את מסך התפריט.
+ * המשתמש יכול להתחיל משחק, להתחבר, לראות הסברים או קרדיטים.
+ */
 public class MainActivity extends AppCompatActivity {
 
     private SoundPool soundPool;
     private int clickSoundId;
     private TextView bestScoreView;
 
+    /**
+     * מופעל בעת יצירת הפעילות. מאתחל את כל הרכיבים וההגדרות.
+     *
+     * @param savedInstanceState מצב שמור של האקטיביטי, אם קיים.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        keepScreenOnAndHideSystemUI();
+        initMusic();
+        initSoundPool();
+        initViews();
+        setupButtons();
+        loadBestScore();
+    }
 
+    /**
+     * מונע מהמסך להיכבות ומסתיר את ממשק המשתמש של המערכת לצורך חוויית מסך מלא.
+     */
+    private void keepScreenOnAndHideSystemUI() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
@@ -50,20 +69,24 @@ public class MainActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         );
+    }
 
-
-        bestScoreView = findViewById(R.id.bestScoreView);
-
-        // להתחיל לנגן\
+    /**
+     * מתחיל את ניגון המוזיקה אם היא עדיין לא פועלת.
+     */
+    private void initMusic() {
         if (!MusicService.isPlaying) {
             Intent startIntent = new Intent(this, MusicService.class);
             startIntent.setAction(MusicService.ACTION_START);
             startIntent.putExtra(MusicService.EXTRA_RES_ID, R.raw.menu_theme);
             startService(startIntent);
         }
+    }
 
-
-        // SoundPool setup
+    /**
+     * מאתחל את מערכת הצלילים של הכפתורים.
+     */
+    private void initSoundPool() {
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_GAME)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -75,76 +98,96 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         clickSoundId = soundPool.load(this, R.raw.button_click, 1);
+    }
 
+    /**
+     * מאתחל את רכיבי התצוגה של המסך.
+     */
+    private void initViews() {
+        bestScoreView = findViewById(R.id.bestScoreView);
+    }
+
+    /**
+     * מגדיר את פעולות הלחצנים במסך הראשי.
+     */
+    private void setupButtons() {
         Button playButton = findViewById(R.id.playButton);
         Button logInButton = findViewById(R.id.logInButton);
-        Button howToPlayButton = findViewById(R.id.howToPlayButton); // ← כפתור "איך משחקים"
+        Button howToPlayButton = findViewById(R.id.howToPlayButton);
         Button creditsButton = findViewById(R.id.creditsButton);
 
-        logInButton.setOnClickListener(v -> {
-            soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
-            startActivity(new Intent(MainActivity.this, LoginActivity.class));
-        });
-
-        playButton.setOnClickListener(v -> {
-            soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
-            startActivity(new Intent(MainActivity.this, GameActivity.class));
-        });
-
-        // 📌 לחיצה על כפתור "איך משחקים"
-        howToPlayButton.setOnClickListener(v -> {
-            soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
-            LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
-            View view = inflater.inflate(R.layout.how_to_play_dialog, null);
-
-            AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-                    .setView(view)
-                    .create();
-
-            Button closeBtn = view.findViewById(R.id.dialog_button_close);
-            closeBtn.setOnClickListener(btn -> {
-                soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
-                dialog.dismiss();
-            });
-
-            if (dialog.getWindow() != null) {
-                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        playButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playClickSound();
+                startActivity(new Intent(MainActivity.this, GameActivity.class));
             }
-
-            dialog.show();
         });
 
-        creditsButton.setOnClickListener(v -> {
-            soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
-            LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
-            View view = inflater.inflate(R.layout.credits_dialog, null);
-
-            AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-                    .setView(view)
-                    .create();
-
-            Button closeBtn = view.findViewById(R.id.dialog_button_close);
-            closeBtn.setOnClickListener(btn -> {
-                soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
-                dialog.dismiss();
-            });
-
-            if (dialog.getWindow() != null) {
-                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        logInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playClickSound();
+                startActivity(new Intent(MainActivity.this, LoginActivity.class));
             }
-
-            dialog.show();
         });
 
-        // 🧠 הצגת שיאים מהשרת
+        howToPlayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playClickSound();
+                showCustomDialog(R.layout.how_to_play_dialog);
+            }
+        });
+
+        creditsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playClickSound();
+                showCustomDialog(R.layout.credits_dialog);
+            }
+        });
+    }
+
+    /**
+     * מציג דיאלוג מותאם אישית עם פריסת XML נתונה.
+     *
+     * @param layoutId מזהה פריסת ה-XML של הדיאלוג.
+     */
+    private void showCustomDialog(int layoutId) {
+        LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+        View view = inflater.inflate(layoutId, null);
+        AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                .setView(view)
+                .create();
+
+        Button closeBtn = view.findViewById(R.id.dialog_button_close);
+        closeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View btn) {
+                playClickSound();
+                dialog.dismiss();
+            }
+        });
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        dialog.show();
+    }
+
+    /**
+     * טוען את הניקוד הגבוה ביותר מהשרת או מהזיכרון המקומי.
+     */
+    private void loadBestScore() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
         bestScoreView.setText("High scores not available offline");
+
         if (user == null) {
             SharedPreferences prefs = getSharedPreferences("GamePrefs", MODE_PRIVATE);
             bestScoreView.setText("HIGH SCORE:" + prefs.getInt("high_score", 0));
-        }
-        else {
+        } else {
             String userId = user.getUid();
             FirebaseDatabase database = FirebaseDatabase.getInstance();
             DatabaseReference userRef = database.getReference("users").child(userId).child("highest_Score");
@@ -170,6 +213,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * מנגן צליל לחיצה.
+     */
+    private void playClickSound() {
+        soundPool.play(clickSoundId, 1, 1, 0, 0, 1);
+    }
+
+    /**
+     * מופעל כאשר הפעילות מושהית. עוצר את המוזיקה.
+     */
     @Override
     protected void onPause() {
         super.onPause();
@@ -178,6 +231,9 @@ public class MainActivity extends AppCompatActivity {
         startService(pauseIntent);
     }
 
+    /**
+     * מופעל כאשר הפעילות חוזרת לרקע. ממשיך את ניגון המוזיקה.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -186,13 +242,12 @@ public class MainActivity extends AppCompatActivity {
         startService(resumeIntent);
     }
 
+    /**
+     * מופעל כאשר הפעילות נהרסת. משחרר את משאבי הצליל.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
         soundPool.release();
     }
 }
-
-
-
-
