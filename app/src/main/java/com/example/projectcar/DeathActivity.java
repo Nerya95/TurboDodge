@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -11,12 +12,16 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 /**
  * מחלקה זו מציגה את מסך הסיום של המשחק.
@@ -84,37 +89,90 @@ public class DeathActivity extends AppCompatActivity {
     }
 
     /**
-     * בודק אם יש שיא חדש, מעדכן בזיכרון המקומי וב-Firebase אם צריך
-     * @param finalScore הניקוד הסופי של השחקן
+     * בודק ומעדכן את השיא של המשתמש - הן מקומית והן בענן (Firebase).
+     * אם השיא בענן גבוה מהשיא המקומי, יעדכן את השיא המקומי.
+     * אם הציון החדש גבוה מהשיא הקיים, יעדכן את השיא גם מקומית וגם בענן (אם המשתמש מחובר).
+     *
+     * @param finalScore הציון שהשחקן קיבל במשחק הנוכחי
      */
     private void checkAndUpdateHighScore(int finalScore) {
         SharedPreferences prefs = getSharedPreferences("GamePrefs", MODE_PRIVATE);
-        int highScore = prefs.getInt("high_score", 0);
+        int localHighScore = prefs.getInt("high_score", 0);
 
         TextView highScoreText = findViewById(R.id.high_score);
-        if (finalScore > highScore) {
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putInt("high_score", finalScore);
-            editor.apply();
-            highScoreText.setText("New High Score!");
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-            // שמירת שיא ב-Firebase אם המשתמש מחובר
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            if (user != null) {
-                String userId = user.getUid();
-                FirebaseDatabase database = FirebaseDatabase.getInstance();
-                DatabaseReference userRef = database.getReference("users")
-                        .child(userId).child("highest_Score");
+        if (user != null) {
+            String userId = user.getUid();
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference userRef = database.getReference("users").child(userId).child("highest_Score");
 
-                userRef.setValue(finalScore);
-                Toast.makeText(this, "Record saved in cloud", Toast.LENGTH_SHORT).show();
-            } else {
-                highScoreText.setError("עליך להתחבר כדי לשמור בענן");
-            }
+
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    Integer cloudHighScore = snapshot.getValue(Integer.class);
+
+                    int bestKnownScore = 0;
+
+                    if (cloudHighScore == null)
+                        userRef.setValue(0);
+
+                    bestKnownScore = cloudHighScore;
+
+                    // עדכון שיא מקומי לפי הענן
+                    if(cloudHighScore > localHighScore) {
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putInt("high_score", cloudHighScore);
+                        editor.apply();
+                    }
+                    else
+                        bestKnownScore = localHighScore;
+
+                    if (finalScore > bestKnownScore) {
+                        // שיא חדש - עדכון מקומי וענן
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putInt("high_score", finalScore);
+                        editor.apply();
+                        highScoreText.setText("New High Score!");
+                        userRef.setValue(finalScore);
+                        Toast.makeText(DeathActivity.this, "Record saved in cloud", Toast.LENGTH_SHORT).show();
+                    } else {
+                        highScoreText.setText("Best Score: " + bestKnownScore);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                    // במקרה של שגיאה - המשך כרגיל עם השיא המקומי
+                    if (finalScore > localHighScore) {
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putInt("high_score", finalScore);
+                        editor.apply();
+                        highScoreText.setText("New High Score!");
+                        userRef.setValue(finalScore);
+                        Toast.makeText(DeathActivity.this, "Record saved in cloud", Toast.LENGTH_SHORT).show();
+                    } else
+                        highScoreText.setText("Best Score: " + localHighScore);
+
+                }
+            });
         } else {
-            highScoreText.setText("Best Score: " + highScore);
+            // משתמש לא מחובר
+
+            if (finalScore > localHighScore) {
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putInt("high_score", finalScore);
+                editor.apply();
+                highScoreText.setText("New High Score!");
+            } else {
+                highScoreText.setText("Best Score: " + localHighScore);
+            }
         }
     }
+
+
 
     /**
      * מגדיר את פעולות הכפתורים למסך הבית ולהתחלת משחק חדש

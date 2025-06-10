@@ -27,13 +27,13 @@ public class JeepManager extends SurfaceView implements SurfaceHolder.Callback, 
     private Bitmap jeepBitmap; // תמונת הג'יפ
     private final int numLanes = 4; // מספר הנתיבים במשחק
     private float[] lanePositions; // מיקומי מרכזי הנתיבים בציר X
-    private float jeepSpeed = 65f; // מהירות בסיסית של הג'יפים
+    private float jeepSpeed = 50f; // מהירות בסיסית של הג'יפים
     private float jeepWidth, jeepHeight; // מידות הג'יפ לאחר קנה מידה
 
     // משתנים לכביש
     private Bitmap roadBitmap; // תמונת הכביש
     private float roadY1 = 0, roadY2; // מיקומי הכביש בציר Y (לטשטוש תנועה)
-    private final float roadSpeed = 40f; // מהירות גלילת הכביש
+    private final float roadSpeed = 90f; // מהירות גלילת הכביש
 
     // משתנים כלליים
     private int screenWidth, screenHeight; // מידות המסך
@@ -219,7 +219,7 @@ public class JeepManager extends SurfaceView implements SurfaceHolder.Callback, 
      */
     private void updateDifficulty() {
         long elapsedTime = System.currentTimeMillis() - startTime;
-        jeepSpeed = 15f + (elapsedTime / 20000f) * 5; // מגדיל מהירות עם הזמן
+        jeepSpeed = 60f + (elapsedTime / 20000f) * 5; // מגדיל מהירות עם הזמן
     }
 
     /**
